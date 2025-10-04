@@ -1,9 +1,11 @@
 import { MittwaldAPIV2Client } from "@mittwald/api-client";
 import * as flags from "flags";
+import { WebhookClient } from "discord.js";
 
 const token = flags.defineString("api-token")
 const ip = flags.defineString("ip")
 const dns = flags.defineStringList("dns-zones")
+const domainName = flags.defineString("domain")
 
 flags.parse()
 
@@ -14,6 +16,7 @@ if (!(token.isSet && ip.isSet && dns.isSet)) process.exit(1)
 console.log(token.get() + " " + ip.currentValue + " " + dns.currentValue)
 
 const client = MittwaldAPIV2Client.newWithToken(token.currentValue) 
+const dc = new WebhookClient({url: "https://discord.com/api/webhooks/1423980133974282311/tq2Z9mtSS-wQxD-vfot_Eh7sL1YyPOnA2VszYsPaf1IfjeAbDmRUVkQMshgfl32-SPlr"})
 
 for (const zone of dns.currentValue) {
 client.domain.dnsUpdateRecordSet({
@@ -29,7 +32,11 @@ client.domain.dnsUpdateRecordSet({
         }
     }
 }).then(res => {
-    console.log(res.status)
+    console.log("setting A Record returned " + res.status)
     console.log(res.statusText)
+
+    if (res.status != 204) {
+        dc.send("Failed to set dns record with code " + res.status + " for domain " + domainName.currentValue)
+    }
 })
 }
