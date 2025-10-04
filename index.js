@@ -9,11 +9,11 @@ const domainName = flags.defineStringList("domains")
 
 flags.parse()
 
-console.log(process.argv)
+//console.log(process.argv)
 
 if (!(token.isSet && ip.isSet && dns.isSet)) process.exit(1)
 
-console.log(token.get() + " " + ip.currentValue + " " + dns.currentValue)
+//console.log(token.get() + " " + ip.currentValue + " " + dns.currentValue)
 
 const client = MittwaldAPIV2Client.newWithToken(token.currentValue) 
 const dc = new WebhookClient({url: "https://discord.com/api/webhooks/1423980133974282311/tq2Z9mtSS-wQxD-vfot_Eh7sL1YyPOnA2VszYsPaf1IfjeAbDmRUVkQMshgfl32-SPlr"})
@@ -22,6 +22,7 @@ let zones = dns.currentValue
 let names = domainName.currentValue
 
 for (let i = 0; i < zones; i++) {
+    console.log("Setting A record of " + names[i] + " to " + ip.currentValue)
     client.domain.dnsUpdateRecordSet({
         dnsZoneId: zones[i],
         recordSet: "a",
@@ -35,7 +36,7 @@ for (let i = 0; i < zones; i++) {
             }
         }
     }).then(res => {
-        console.log("setting A Record returned " + res.status)
+        console.log("Setting A Record returned " + res.status)
         console.log(res.statusText)
 
         if (res.status != 204) {
