@@ -21,7 +21,16 @@ const dc = new WebhookClient({url: "https://discord.com/api/webhooks/14239801339
 let zones = dns.currentValue
 let names = domainName.currentValue
 
-for (let i = 0; i < zones; i++) {
+if (zones.length == 0) {
+    console.log("No Zones Provided")
+    return 1
+}
+if (zones.length != names.length) {
+    console.log("Zone and Domain name length mismatch")
+    return 1
+}
+
+for (let i = 0; i < zones.length; i++) {
     console.log("Setting A record of " + names[i] + " to " + ip.currentValue)
     client.domain.dnsUpdateRecordSet({
         dnsZoneId: zones[i],
@@ -44,3 +53,5 @@ for (let i = 0; i < zones; i++) {
         }
     })
 }
+
+return 0
