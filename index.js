@@ -23,11 +23,11 @@ let names = domainName.currentValue
 
 if (zones.length == 0) {
     console.log("No Zones Provided")
-    return 1
+    process.exit(1)
 }
 if (zones.length != names.length) {
     console.log("Zone and Domain name length mismatch")
-    return 1
+    process.exit(1)
 }
 
 for (let i = 0; i < zones.length; i++) {
@@ -53,5 +53,3 @@ for (let i = 0; i < zones.length; i++) {
         }
     })
 }
-
-return 0
