@@ -1,9 +1,9 @@
 import { MittwaldAPIV2Client } from "@mittwald/api-client";
 import * as flags from "flags";
 import { WebhookClient } from "discord.js";
-import { Resolver } from "node:dns";
+import { resolve4 } from "dns/promises";
 
-const token = flags.defineString("api-token")
+const token = flags.defineString("api-token") ?? ""
 const ip = flags.defineString("ip")
 const dns = flags.defineStringList("dns-zones")
 const domainName = flags.defineStringList("domains")
@@ -16,15 +16,12 @@ if (!(token.isSet && ip.isSet && dns.isSet)) process.exit(1)
 
 //console.log(token.get() + " " + ip.currentValue + " " + dns.currentValue)
 
-const resolver = new Resolver();
-resolver.setServers(['4.4.4.4']);
 
+const client = MittwaldAPIV2Client.newWithToken(token.currentValue)
+const dc = new WebhookClient({ url: "https://discord.com/api/webhooks/1423980133974282311/tq2Z9mtSS-wQxD-vfot_Eh7sL1YyPOnA2VszYsPaf1IfjeAbDmRUVkQMshgfl32-SPlr" })
 
-const client = MittwaldAPIV2Client.newWithToken(token.currentValue) 
-const dc = new WebhookClient({url: "https://discord.com/api/webhooks/1423980133974282311/tq2Z9mtSS-wQxD-vfot_Eh7sL1YyPOnA2VszYsPaf1IfjeAbDmRUVkQMshgfl32-SPlr"})
-
-let zones = dns.currentValue
-let names = domainName.currentValue
+let zones = dns.currentValue ?? ""
+let names = domainName.currentValue ?? []
 
 if (zones.length == 0) {
     console.log("No Zones Provided")
@@ -38,23 +35,17 @@ if (zones.length != names.length) {
 for (let i = 0; i < zones.length; i++) {
     console.log("Resolving " + names[i]);
     let shouldUpdate = true;
-    
-    resolver.resolve4(names[i], (err, addr) => {
-        if (err) {
-            console.log("Error getting ip");
-            console.error(err);
-            return;
-        }
-        
-        if (addr.length === 0) {
-            consol.log("found no address")
-            return;
-        }
-        console.log("current IP: " + addr[i]);
-        if (addr[i] === ip.currentValue) {
-            shouldUpdate = true;
-        }
-    });
+
+    const addr = resolve4(names[i]);
+
+    if (addr.length === 0) {
+        console.log("found no address")
+    }
+
+    console.log("current IP: " + addr[i]);
+    if (addr[i] === ip.currentValue) {
+        shouldUpdate = true;
+    }
 
     if (!shouldUpdate) {
         console.log("No need to update");
@@ -65,13 +56,7 @@ for (let i = 0; i < zones.length; i++) {
         dnsZoneId: zones[i],
         recordSet: "a",
         data: {
-            a: [ip.currentValue],
-            aaaa: [],
-            settings:{
-                ttl:{
-                    auto:true
-                }
-            }
+            a: ip.currentValue ? [ip.currentValue] : [],
         }
     }).then(res => {
         console.log("Setting A Record returned " + res.status)
