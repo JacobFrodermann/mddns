@@ -1,6 +1,7 @@
 import { MittwaldAPIV2Client } from "@mittwald/api-client";
 import * as flags from "flags";
 import { WebhookClient } from "discord.js";
+import { Resolver } from "node:dns";
 
 const token = flags.defineString("api-token")
 const ip = flags.defineString("ip")
@@ -14,6 +15,10 @@ flags.parse()
 if (!(token.isSet && ip.isSet && dns.isSet)) process.exit(1)
 
 //console.log(token.get() + " " + ip.currentValue + " " + dns.currentValue)
+
+const resolver = new Resolver();
+resolver.setServers(['4.4.4.4']);
+
 
 const client = MittwaldAPIV2Client.newWithToken(token.currentValue) 
 const dc = new WebhookClient({url: "https://discord.com/api/webhooks/1423980133974282311/tq2Z9mtSS-wQxD-vfot_Eh7sL1YyPOnA2VszYsPaf1IfjeAbDmRUVkQMshgfl32-SPlr"})
@@ -31,6 +36,30 @@ if (zones.length != names.length) {
 }
 
 for (let i = 0; i < zones.length; i++) {
+    console.log("Resolving " + names[i]);
+    let shouldUpdate = true;
+    
+    resolver.resolve4(names[i], (err, addr) => {
+        if (err) {
+            console.log("Error getting ip");
+            console.error(err);
+            return;
+        }
+        
+        if (addr.length === 0) {
+            consol.log("found no address")
+            return;
+        }
+        console.log("current IP: " + addr[i]);
+        if (addr[i] === ip.currentValue) {
+            shouldUpdate = true;
+        }
+    });
+
+    if (!shouldUpdate) {
+        console.log("No need to update");
+        continue;
+    }
     console.log("Setting A record of " + names[i] + " to " + ip.currentValue)
     client.domain.dnsUpdateRecordSet({
         dnsZoneId: zones[i],
