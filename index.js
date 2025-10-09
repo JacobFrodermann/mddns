@@ -36,9 +36,9 @@ for (let i = 0; i < zones.length; i++) {
     console.log("Resolving " + names[i]);
     let shouldUpdate = true;
 
-    const addr = resolve4(names[i]);
+    const addr = await resolve4(names[i]);
 
-    if (addr.length === 0) {
+    if (!addr || addr.length === 0) {
         console.log("found no address")
     }
 
@@ -56,7 +56,13 @@ for (let i = 0; i < zones.length; i++) {
         dnsZoneId: zones[i],
         recordSet: "a",
         data: {
-            a: ip.currentValue ? [ip.currentValue] : [],
+            a: ip.currentValue,
+            aaaa: [],
+            settings: {
+                ttl: {
+                    auto: true
+                }
+            }
         }
     }).then(res => {
         console.log("Setting A Record returned " + res.status)
